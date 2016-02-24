@@ -1015,10 +1015,11 @@ impl<Ur: Unsigned, Br: Bit> Div<UInt<Ur, Br>> for UTerm {
 
 impl<Ul: Unsigned, Bl: Bit, Ur: Unsigned, Br: Bit> Div<UInt<Ur, Br>> for UInt<Ul, Bl>
     where UInt<Ul, Bl>: Cmp<UInt<Ur, Br>>,
-          UInt<Ul, Bl>: PrivateDivFirstStep<<UInt<Ul, Bl> as Cmp<UInt<Ur, Br>>>::Output,
+          (): PrivateDivFirstStep<UInt<Ul, Bl>, <UInt<Ul, Bl> as Cmp<UInt<Ur, Br>>>::Output,
               UInt<Ur, Br>>
 {
-    type Output = <UInt<Ul, Bl> as PrivateDivFirstStep<
+    type Output = <() as PrivateDivFirstStep<
+        UInt<Ul, Bl>,
         <UInt<Ul, Bl> as Cmp<UInt<Ur, Br>>>::Output,
         UInt<Ur, Br>
     >>::Quotient;
@@ -1029,19 +1030,19 @@ impl<Ul: Unsigned, Bl: Bit, Ur: Unsigned, Br: Bit> Div<UInt<Ur, Br>> for UInt<Ul
 // PrivateDivFirstStep
 
 // Numerator < Denominator: return 0
-impl<Divisor: Unsigned, Numerator: Unsigned> PrivateDivFirstStep<Less, Divisor> for Numerator {
+impl<Divisor: Unsigned, Numerator: Unsigned> PrivateDivFirstStep<Numerator, Less, Divisor> for () {
     type Quotient = U0;
     type Remainder = Numerator;
 }
 // Numerator == Denominator: return 1
-impl<Divisor: Unsigned, Numerator: Unsigned> PrivateDivFirstStep<Equal, Divisor> for Numerator {
+impl<Divisor: Unsigned, Numerator: Unsigned> PrivateDivFirstStep<Numerator, Equal, Divisor> for () {
     type Quotient = U1;
     type Remainder = U0;
 }
 // Numerator > Denominator:
 // I = SizeOf(Numerator) - SizeOf(Denominator), Q = 0, Divisor <<= I, C = Numerator.Cmp(Divisor), Remainder = Numerator
 // Call PrivateDiv
-impl<Divisor: Unsigned, Numerator: Unsigned> PrivateDivFirstStep<Greater, Divisor> for Numerator
+impl<Divisor: Unsigned, Numerator: Unsigned> PrivateDivFirstStep<Numerator, Greater, Divisor> for ()
     where Numerator: BitDiff<Divisor> + Cmp<<Divisor as Shl<<Numerator as BitDiff<Divisor>>::Output>>::Output>,
           Divisor: Shl<<Numerator as BitDiff<Divisor>>::Output>,
           (): PrivateDiv<
@@ -1193,18 +1194,19 @@ impl<Ui, Bi, Q, Divisor, Remainder> PrivateDiv<Remainder, Greater, UInt<Ui, Bi>,
 impl<Ur: Unsigned, Br: Bit> Rem<UInt<Ur, Br>> for UTerm {
     type Output = UTerm;
     fn rem(self, _: UInt<Ur, Br>) -> Self::Output {
-        unreachable!()
+        match self {}
     }
 }
 
 impl<Ul: Unsigned, Bl: Bit, Ur: Unsigned, Br: Bit> Rem<UInt<Ur, Br>> for UInt<Ul, Bl>
     where UInt<Ul, Bl>: Cmp<UInt<Ur, Br>>,
-          UInt<Ul, Bl>: PrivateDivFirstStep<<UInt<Ul, Bl> as Cmp<UInt<Ur, Br>>>::Output,
+          (): PrivateDivFirstStep<UInt<Ul, Bl>, <UInt<Ul, Bl> as Cmp<UInt<Ur, Br>>>::Output,
               UInt<Ur, Br>>
 {
-    type Output = <UInt<Ul, Bl> as PrivateDivFirstStep<
+    type Output = <() as PrivateDivFirstStep<
+        UInt<Ul, Bl>,
         <UInt<Ul, Bl> as Cmp<UInt<Ur, Br>>>::Output,
         UInt<Ur, Br>
     >>::Remainder;
-    fn rem(self, _: UInt<Ur, Br>) -> Self::Output { unreachable!() }
+    fn rem(self, _: UInt<Ur, Br>) -> Self::Output { unreachable!( )}
 }
