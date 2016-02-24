@@ -1044,20 +1044,23 @@ impl<Divisor: Unsigned, Numerator: Unsigned> PrivateDivFirstStep<Equal, Divisor>
 impl<Divisor: Unsigned, Numerator: Unsigned> PrivateDivFirstStep<Greater, Divisor> for Numerator
     where Numerator: BitDiff<Divisor> + Cmp<<Divisor as Shl<<Numerator as BitDiff<Divisor>>::Output>>::Output>,
           Divisor: Shl<<Numerator as BitDiff<Divisor>>::Output>,
-          Numerator: PrivateDiv<
+          (): PrivateDiv<
+              Numerator,
               <Numerator as Cmp<<Divisor as ShiftDiff<Numerator>>::Output>>::Output,
               <Numerator as BitDiff<Divisor>>::Output,
               U0,
              <Divisor as ShiftDiff<Numerator>>::Output
           >
 {
-    type Quotient = <Numerator as PrivateDiv<
+    type Quotient = <() as PrivateDiv<
+        Numerator,
         <Numerator as Cmp<<Divisor as ShiftDiff<Numerator>>::Output>>::Output,
         <Numerator as BitDiff<Divisor>>::Output, // I
         U0, // Q
         <Divisor as ShiftDiff<Numerator>>::Output // Divisor
         >>::Quotient;
-    type Remainder = <Numerator as PrivateDiv<
+    type Remainder = <() as PrivateDiv<
+        Numerator,
         <Numerator as Cmp<<Divisor as ShiftDiff<Numerator>>::Output>>::Output,
         <Numerator as BitDiff<Divisor>>::Output, // I
         U0, // Q
@@ -1069,7 +1072,7 @@ impl<Divisor: Unsigned, Numerator: Unsigned> PrivateDivFirstStep<Greater, Diviso
 // PrivateDiv with I == 0
 
 // Remainder < Divisor: return Q
-impl<Q, Divisor, Remainder> PrivateDiv<Less, U0, Q, Divisor> for Remainder
+impl<Q, Divisor, Remainder> PrivateDiv<Remainder, Less, U0, Q, Divisor> for ()
     where Q: Unsigned,
           Divisor: Unsigned,
           Remainder: Unsigned
@@ -1079,7 +1082,7 @@ impl<Q, Divisor, Remainder> PrivateDiv<Less, U0, Q, Divisor> for Remainder
 }
 
 // Remainder == Divisor: return Q + 1
-impl<Q, Divisor, Remainder> PrivateDiv<Equal, U0, Q, Divisor> for Remainder
+impl<Q, Divisor, Remainder> PrivateDiv<Remainder, Equal, U0, Q, Divisor> for ()
     where Q: Unsigned,
           Divisor: Unsigned,
           Remainder: Unsigned,
@@ -1090,7 +1093,7 @@ impl<Q, Divisor, Remainder> PrivateDiv<Equal, U0, Q, Divisor> for Remainder
 }
 
 // Remainder > Divisor: return Q + 1
-impl<Q, Divisor, Remainder> PrivateDiv<Greater, U0, Q, Divisor> for Remainder
+impl<Q, Divisor, Remainder> PrivateDiv<Remainder, Greater, U0, Q, Divisor> for ()
     where Q: Unsigned,
           Divisor: Unsigned,
           Remainder: Unsigned,
@@ -1105,7 +1108,7 @@ impl<Q, Divisor, Remainder> PrivateDiv<Greater, U0, Q, Divisor> for Remainder
 // PrivateDiv with I > 0
 
 // Remainder == Divisor: return Q + 2^I = Q + 1 << I
-impl<Ui, Bi, Q, Divisor, Remainder> PrivateDiv<Equal, UInt<Ui, Bi>, Q, Divisor> for Remainder
+impl<Ui, Bi, Q, Divisor, Remainder> PrivateDiv<Remainder, Equal, UInt<Ui, Bi>, Q, Divisor> for ()
     where Ui: Unsigned,
           Bi: Bit,
           Q: Unsigned,
@@ -1120,25 +1123,28 @@ impl<Ui, Bi, Q, Divisor, Remainder> PrivateDiv<Equal, UInt<Ui, Bi>, Q, Divisor> 
 
 // Remainder < Divisor: Divisor >>= 1, I -= 1, C = Remainder.cmp(Divisor)
 // Call PrivateDiv
-impl<Ui, Bi, Q, Divisor, Remainder> PrivateDiv<Less, UInt<Ui, Bi>, Q, Divisor> for Remainder
+impl<Ui, Bi, Q, Divisor, Remainder> PrivateDiv<Remainder, Less, UInt<Ui, Bi>, Q, Divisor> for ()
     where Ui: Unsigned, Bi: Bit, Q: Unsigned, Divisor: Unsigned, Remainder: Unsigned,
           Divisor: Shr<B1>,
           Remainder: Cmp<<Divisor as Shr<B1>>::Output>,
           UInt<Ui, Bi>: Sub<U1>,
-          Remainder: PrivateDiv<
+          (): PrivateDiv<
+              Remainder,
               <Remainder as Cmp<<Divisor as Shr<B1>>::Output>>::Output,
               <UInt<Ui, Bi> as Sub<U1>>::Output,
               Q,
               <Divisor as Shr<B1>>::Output
           >
 {
-    type Quotient = <Remainder as PrivateDiv<
+    type Quotient = <() as PrivateDiv<
+        Remainder,
         <Remainder as Cmp<<Divisor as Shr<B1>>::Output>>::Output, // Remainder.cmp(New Divisor)
         <UInt<Ui, Bi> as Sub<U1>>::Output,
         Q,
         <Divisor as Shr<B1>>::Output
     >>::Quotient;
-    type Remainder = <Remainder as PrivateDiv<
+    type Remainder = <() as PrivateDiv<
+        Remainder,
         <Remainder as Cmp<<Divisor as Shr<B1>>::Output>>::Output,
         <UInt<Ui, Bi> as Sub<U1>>::Output,
         Q,
@@ -1149,7 +1155,7 @@ impl<Ui, Bi, Q, Divisor, Remainder> PrivateDiv<Less, UInt<Ui, Bi>, Q, Divisor> f
 // Remainder > Divisor:
 // Q += 2^I, I -= 1, R -= D, D >>= 1, C = (new R).cmp(new D)
 // Call PrivateDiv
-impl<Ui, Bi, Q, Divisor, Remainder> PrivateDiv<Greater, UInt<Ui, Bi>, Q, Divisor> for Remainder
+impl<Ui, Bi, Q, Divisor, Remainder> PrivateDiv<Remainder, Greater, UInt<Ui, Bi>, Q, Divisor> for ()
     where Ui: Unsigned, Bi: Bit, Q: Unsigned, Divisor: Unsigned, Remainder: Unsigned,
           Divisor: Shr<B1>,
           Remainder: Sub<Divisor>,
@@ -1157,25 +1163,28 @@ impl<Ui, Bi, Q, Divisor, Remainder> PrivateDiv<Greater, UInt<Ui, Bi>, Q, Divisor
           UInt<Ui, Bi>: Sub<U1>,
           U1: Shl<UInt<Ui, Bi>>,
           Q: Add<<U1 as Shl<UInt<Ui, Bi>>>::Output>,
-          <Remainder as Sub<Divisor>>::Output: PrivateDiv<
+          (): PrivateDiv<
+              <Remainder as Sub<Divisor>>::Output,
               <<Remainder as Sub<Divisor>>::Output as Cmp<<Divisor as Shr<B1>>::Output>>::Output,
               <UInt<Ui, Bi> as Sub<U1>>::Output,
               <Q as Add<<U1 as Shl<UInt<Ui, Bi>>>::Output>>::Output,
               <Divisor as Shr<B1>>::Output
           >
 {
-    type Quotient = <<Remainder as Sub<Divisor>>::Output as PrivateDiv<
+    type Quotient = <() as PrivateDiv<
+        <Remainder as Sub<Divisor>>::Output,
         <<Remainder as Sub<Divisor>>::Output as Cmp<<Divisor as Shr<B1>>::Output>>::Output,
-    <UInt<Ui, Bi> as Sub<U1>>::Output,
-    <Q as Add<<U1 as Shl<UInt<Ui, Bi>>>::Output>>::Output,
-    <Divisor as Shr<B1>>::Output
-        >>::Quotient;
-    type Remainder = <<Remainder as Sub<Divisor>>::Output as PrivateDiv<
+        <UInt<Ui, Bi> as Sub<U1>>::Output,
+        <Q as Add<<U1 as Shl<UInt<Ui, Bi>>>::Output>>::Output,
+        <Divisor as Shr<B1>>::Output
+            >>::Quotient;
+    type Remainder = <() as PrivateDiv<
+        <Remainder as Sub<Divisor>>::Output,
         <<Remainder as Sub<Divisor>>::Output as Cmp<<Divisor as Shr<B1>>::Output>>::Output,
-    <UInt<Ui, Bi> as Sub<U1>>::Output,
-    <Q as Add<<U1 as Shl<UInt<Ui, Bi>>>::Output>>::Output,
-    <Divisor as Shr<B1>>::Output
-        >>::Remainder;
+        <UInt<Ui, Bi> as Sub<U1>>::Output,
+        <Q as Add<<U1 as Shl<UInt<Ui, Bi>>>::Output>>::Output,
+        <Divisor as Shr<B1>>::Output
+            >>::Remainder;
 }
 
 // ---------------------------------------------------------------------------------------
